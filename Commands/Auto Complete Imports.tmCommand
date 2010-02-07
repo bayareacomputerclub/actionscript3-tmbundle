@@ -24,7 +24,7 @@ FlexMate.complete_import(STDIN.read.strip)
 	<key>output</key>
 	<string>discard</string>
 	<key>scope</key>
-	<string>source.actionscript.3 meta.package.actionscript.3, source.actionscript.3.embedded.mxml, comment.block.documentation.asdoc</string>
+	<string>source.actionscript.3 meta.package.actionscript.3, source.actionscript.3.embedded.mxml, comment.block.documentation.asdoc, source.actionscript.3.embedded.mxml</string>
 	<key>uuid</key>
 	<string>783EB172-C2CF-44B1-A804-E06EBA9EB6DB</string>
 </dict>
