@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby -w
 
-path = File.expand_path(ARGV[0])
+require ENV['TM_SUPPORT_PATH'] + '/lib/textmate'
+
+path = File.expand_path(ENV['TM_PROJECT_DIRECTORY'])
 bookmarks = `xattr -rp com.macromates.bookmarked_lines #{path} 2>/dev/null`
 
 def parse_bookmarks_to_breakpoints(bookmarks)
