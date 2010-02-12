@@ -35,19 +35,19 @@ def generate_method_doc(sig)
 	count = 1
 	args.each { |e|
 		arg =  e.split(':')
-		puts " * @private" if arg.length != 2
+		puts "* @private" if arg.length != 2
 		name = arg[0]
 		type = arg[1].sub(/=.*$/,'')
 		tab_stop = count &lt; 10 ? "${#{count}}" : ''
-		puts " * @param #{name} #{type} #{tab_stop}"
+		puts "* @param #{name} #{type} #{tab_stop}"
 		count += 1
 	}
-	puts " * @private" if args.empty?
+	puts "* @private" if args.empty?
 	unless sig[:returns] == 'void'
 		tab_stop = count &lt; 10 ? "${#{count}}" : ''
-	  puts " * @return #{sig[:returns]} #{tab_stop}"
+	  puts "* @return #{sig[:returns]} #{tab_stop}"
   end
-	print " */"
+	print "*/"
 end
 
 t = SnippetBuilder.new
