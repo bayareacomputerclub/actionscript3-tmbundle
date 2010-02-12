@@ -109,7 +109,7 @@ end
 	<key>input</key>
 	<string>document</string>
 	<key>keyEquivalent</key>
-	<string>@K</string>
+	<string>^H</string>
 	<key>name</key>
 	<string>Tidy</string>
 	<key>output</key>
