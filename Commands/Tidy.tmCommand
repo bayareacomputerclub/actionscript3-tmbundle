@@ -25,10 +25,12 @@ last_line_empty=false;
 this_line_empty=false;
 
 doc.each do |line|
-  
-	if remove_leading_tab
-		line = line.sub(/^\t/,"")
-	end
+
+#	Disabling the removal of leading tab.
+#  
+#	if remove_leading_tab
+#		line = line.sub(/^\t/,"")
+#	end
 
 	remove_leading_tab = false if line =~ /^class/
 	
