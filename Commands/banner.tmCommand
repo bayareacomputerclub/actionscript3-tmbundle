@@ -24,6 +24,7 @@ all_banners = [
 { 'title' =&gt; 'Constructor', 'data' =&gt; '// ${1:CONSTRUCTOR}' },
 { 'title' =&gt; 'Event Handlers', 'data' =&gt; '// ${1:EVENT HANDLERS}' },
 { 'title' =&gt; 'Getter/Setters', 'data' =&gt; "// ${1:GETTER / SETTERS}" },
+{ 'title' =&gt; 'Injections', 'data' =&gt; "// ${1:INJECTIONS}" },
 { 'title' =&gt; '---' },
 { 'title' =&gt; 'Private and Protected Methods', 'data' =&gt; '// ${1:PRIVATE &amp; PROTECTED METHODS}' },
 { 'title' =&gt; 'Private and Protected Variables', 'data' =&gt; '// ${1:PRIVATE &amp; PROTECTED INSTANCE VARIABLES}' },
