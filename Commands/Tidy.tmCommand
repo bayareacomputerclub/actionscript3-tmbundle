@@ -96,15 +96,15 @@ doc.each do |line|
 	#if line =~ /(^\s*)else\s*\{/
 	#  line = line.sub "#{$1}else\n#{$1}\{"
 	#end
-	
+
 	# ensure a space between any equal sign and what precedes and follows it
-	if line =~ /\&lt;/
-		# do nothing if mxml, formatting there puts no spaces between equal signs
-		# NOTE: This will not tidy up lines that have bitwise operations
-	else
-		shrunken = line.gsub( " = ", "=")
-		line = shrunken.gsub("=", " = ")
-	end
+	# if line =~ /\&lt;/
+	# 	# do nothing if mxml, formatting there puts no spaces between equal signs
+	# 	# NOTE: This will not tidy up lines that have bitwise operations
+	# else
+	# 	shrunken = line.gsub( " = ", "=")
+	# 	line = shrunken.gsub("=", " = ")
+	# end
 
 	unless last_line_empty and this_line_empty 
 		puts line
