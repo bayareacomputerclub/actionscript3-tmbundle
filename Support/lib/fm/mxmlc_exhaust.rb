@@ -9,6 +9,7 @@ class MxmlcExhaust
   attr_accessor :print_output
   attr_reader :error_count
   attr_reader :line_count
+  attr_reader :input
   
   # Constants to track switches in matches (to prettify output).
   CONFIGURATION_MATCH    = "configuration_match"
@@ -24,7 +25,8 @@ class MxmlcExhaust
     @line_count = 0
     @error_count = 0
     @last_match = ""
-    @print_output = false
+    @print_output = false 
+    @input = []
 
     @error_and_warn_regex = /(\/.*?)(\(([0-9]+)\)|):.*(Error|Warning):\s*(.*)$/
     @config_file_regex    = /(^Loading configuration file )(.*)$/
@@ -37,6 +39,7 @@ class MxmlcExhaust
   # links back to source and configuration files where appropriate.
   #
   def line(str)
+    @input << str
     output = parse_line(str)
     print output if print_output
     output
@@ -66,12 +69,12 @@ class MxmlcExhaust
       unless match === nil
         out << "<br/>" if @last_match != ERROR_WARN_MATCH
         if match[3] == nil
-          out << 'Error ' + match[5] +
+          out << match[4] + ' ' + match[5] +
                 ' in <a title="'+match[1] +
                 '" href="txmt://open?url=file://' + match[1] + '">' +
                 File.basename( match[1] ) + '</a><br/>'
         else
-          out << 'Error <a title="Click to show error." href="txmt://open?url=file://' + match[1] +
+          out << match[4] + ' <a title="Click to show error." href="txmt://open?url=file://' + match[1] +
                 '&line='+ match[3] +
                 '" >' + match[5] +
                 '</a> at line ' + match[3] +
@@ -83,7 +86,7 @@ class MxmlcExhaust
         @last_match = ERROR_WARN_MATCH
         return out
       end
-
+      
       match = @config_file_regex.match(str)
       unless match === nil
           out << "<br/>" if @last_match != CONFIGURATION_MATCH
@@ -115,6 +118,13 @@ class MxmlcExhaust
           cmd = "open #{e_sh($1)}"
           out << '<script type="text/javascript" charset="utf-8">function openSwf(){TextMate.system(\''+cmd+'\', null);}</script>'
           out << "<br/><a href='javascript:openSwf()' title='Click to run (if there is space in the file path this may not work).'>#{$1}</a>#{$2}<br/>"
+      elsif str =~ /Error:/
+        out << "<pre>#{str}</pre>"
+        @error_count += 1
+      elsif str =~ /^\s*$/
+        out << "<!-- empty -->"
+      elsif str =~ /^(Copyright|Version|Adobe)/
+         out << "#{str}<br/>"
       end
 
     rescue TypeError
@@ -152,20 +162,51 @@ if __FILE__ == $0
         {
           :in => "deploy/CompileTest.swf (417 bytes)",
           :out => "<script type=\"text/javascript\" charset=\"utf-8\">function openSwf(){TextMate.system('open deploy/CompileTest.swf', null);}</script><br/><a href='javascript:openSwf()' title='Click to run (if there is space in the file path this may not work).'>deploy/CompileTest.swf</a> (417 bytes)<br/>"
+        },
+        {
+          :in => "Error: could not find source for class BlahBlah:mxml",
+          :out => "<pre>Error: could not find source for class BlahBlah:mxml</pre>"
+        },
+        {
+          :in => " ",
+          :out => "<!-- empty -->"
+        },
+        {
+          :in => "Adobe Compc (Flex Component Compiler)",
+          :out => "Adobe Compc (Flex Component Compiler)<br/>"
+        },
+        {
+          :in => "Version 3.4.0 build 9271",
+          :out => "Version 3.4.0 build 9271<br/>"
+        },
+        {
+          :in => "Copyright (c) 2004-2007 Adobe Systems, Inc. All rights reserved.",
+          :out => "Copyright (c) 2004-2007 Adobe Systems, Inc. All rights reserved.<br/>"
         }
+        # Added the following after getting problematic output when compiling the RobotLegs helvector gallery, but couldn't work out what the problem was.
+        #,{
+        #  :in => "/Users/simon/src/helvector/robotlegs-framework/src/org/robotlegs/base/CommandMap.as(64): col: 19 Warning: The super() statement will be executed prior to entering this constructor.  Add a call to super() within the constructor if you want to explicitly control when it is executed.",
+        #  :out => "???"
+        #},
+        #{
+        #  :in => "public function CommandMap(eventDispatcher:IEventDispatcher, injector:IInjector, reflector:IReflector)",
+        #  :out => ""
+        #}
       ]
     end
     
     def test_exhaust
       
       exhaust = MxmlcExhaust.new
-
+      
       in_out.each { |e|
-        assert_equal(e[:out], exhaust.line(e[:in])) 
+        assert_equal(e[:out], exhaust.line(e[:in]))
       }
       
-      assert_equal(1, exhaust.error_count)
-      assert_equal(in_out.length, exhaust.line_count)
+      assert_equal(2, exhaust.error_count)
+      assert_equal(in_out.length, exhaust.line_count) 
+      
+      assert_equal(in_out.map { |e| e[:in] }.to_s, exhaust.input.to_s)
       
     end
     

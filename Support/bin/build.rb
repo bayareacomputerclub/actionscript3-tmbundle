@@ -7,7 +7,7 @@ require ENV['TM_SUPPORT_PATH'] + '/lib/textmate'
 require ENV['TM_SUPPORT_PATH'] + '/lib/tm/process'
 
 require File.expand_path(File.dirname(__FILE__)) + '/../lib/add_lib'
-
+require 'find'
 require 'fm/flex_mate'
 require 'fm/sdk'
 require 'fm/compiler'
@@ -27,7 +27,7 @@ if File.file?(custom)
   TextMate.exit_show_html
 end
   
-if ENV['TM_PROJECT_DIRECTORY'] && ENV['TM_FLEX_USE_FCSH']
+if ENV['TM_PROJECT_DIRECTORY'] && (ENV['TM_FLEX_USE_FCSH'] == 'true')
   
   #Requires are needed by FlexMate.required_settings + check_valid_paths
   require ENV['TM_SUPPORT_PATH'] + '/lib/web_preview'

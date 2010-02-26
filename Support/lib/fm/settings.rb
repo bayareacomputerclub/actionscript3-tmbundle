@@ -13,8 +13,8 @@ module FlexMate
     # sets the value based on the closest file to the root of the filesystem. To
     # combat this, and enable users to collect files from places outside of the
     # normal project we also check the location of the 'tmproj' file and assume
-    # that if there is one, it has been placed in the root of the flex/actionscript
-    # project.
+    # that if there is one, it has been placed in the root of the
+    # flex/actionscript project.
     #
     def proj_root
 
@@ -34,6 +34,8 @@ module FlexMate
       
       proj_dir = proj_root
       file_specs = ENV['TM_FLEX_FILE_SPECS']
+      
+      return file_specs if file_specs && File.exist?(file_specs)
 
       if proj_dir && file_specs
         file_specs = proj_dir + '/' + file_specs
@@ -55,18 +57,24 @@ module FlexMate
     def flex_output
 
       flex_output = ENV['TM_FLEX_OUTPUT']
+      
       proj_dir = proj_root
-
+      
+      # As this could be called more than once, and the value of TM_FLEX_OUTPUT
+      # stands a chance of being set in between, we need to make sure that we
+      # dont unecessarily prepend the proj_dir.
       if flex_output && proj_dir
+        return flex_output if flex_output.include? proj_dir 
         return proj_dir + '/' + flex_output
       end
 
       fx_out = file_specs.sub(/\.(mxml|as)/, ".swf")
-
-      #TODO: Link to usual src dirs and improve sub with a regexp that
-      #matches src backwards (ie foo/src/bar/src/class) from the end of line.
-      if File.exist?( proj_dir.to_s + '/bin' )
-        fx_out.sub!('src','bin')
+      
+      if !proj_dir.empty? && File.exist?( proj_dir.to_s + '/bin' )
+        #match src backwards from the end of line. This covers us in these
+        #cases foo/src/bar/src/class.
+        sd = SourceTools.common_src_dir_list.reverse.gsub(':','|')
+        fx_out.reverse!.sub!(/(#{sd})/,'nib').reverse!
       end
 
       fx_out
@@ -84,6 +92,29 @@ module FlexMate
         return "#{proj}#{cp}-config.xml"
       end
       return nil
+    end
+    
+    # Boolean to indicate if we are compiling a swc instead of a swf.
+    #
+    def is_swc
+      return true if flex_output =~ /\.swc/ rescue false
+      return false
+    end
+    
+    # A list of classes found in the project.
+    #
+    def list_classes
+      SourceTools.list_all_classes.join(' ')
+    end
+
+    # Locates the first conventional src path found.
+    #
+    def source_path
+      pr = proj_root
+      SourceTools.common_src_dirs.each do |d| 
+        return "#{pr}/#{d}" if File.directory?("#{pr}/#{d}")
+      end
+      nil
     end
     
     protected
@@ -185,10 +216,10 @@ if __FILE__ == $0
       
       assert_equal('/Foo/Bar/TestProject/src/Test-config.xml',
                    FlexMate::Settings.new.compiler_config)
-
-       ENV['TM_PROJECT_FILEPATH'] = '/Foo/Bar/TestProject/baz.tmproj'
-
-       assert_equal('/Foo/Bar/TestProject/src/Test-config.xml',
+      
+      ENV['TM_PROJECT_FILEPATH'] = '/Foo/Bar/TestProject/baz.tmproj'
+      
+      assert_equal('/Foo/Bar/TestProject/src/Test-config.xml',
                     FlexMate::Settings.new.compiler_config)
       
     end
@@ -201,7 +232,7 @@ if __FILE__ == $0
       ENV['TM_PROJECT_DIRECTORY'] = p = cases_dir + '/a'
       assert_equal(p + '/src/App.mxml', s.file_specs)
       
-      ENV['TM_PROJECT_DIRECTORY'] = p = cases_dir + '/b'      
+      ENV['TM_PROJECT_DIRECTORY'] = p = cases_dir + '/b'
       assert_equal(p + '/source/App.as', s.file_specs )
 
       ENV['TM_PROJECT_DIRECTORY'] = p = cases_dir + '/c'
@@ -217,7 +248,7 @@ if __FILE__ == $0
       assert_equal(nil, s.file_specs)
 
       ENV['TM_FLEX_FILE_SPECS'] = 'abc/Test.as'
-      assert_equal(nil, s.file_specs)      
+      assert_equal(nil, s.file_specs)
 
     end
     
@@ -252,6 +283,63 @@ if __FILE__ == $0
       ENV['TM_FLEX_OUTPUT'] = 'abc/Test.swf'
       
       assert_equal('/foo/bar/pro ject/abc/Test.swf', s.flex_output)
+      
+      ENV['TM_FLEX_OUTPUT'] = s.flex_output
+      
+      assert_equal('/foo/bar/pro ject/abc/Test.swf', s.flex_output)
+      
+    end
+    
+    def test_is_swc
+      
+      clear_tm_env
+      
+      s = FlexMate::Settings.new
+      
+      ENV['TM_PROJECT_DIRECTORY'] = '/foo/bar/project'
+      ENV['TM_FLEX_OUTPUT'] = 'abc/Test.swc'
+      
+      assert_equal(true, s.is_swc)
+      
+      clear_tm_env
+      
+      ENV['TM_PROJECT_DIRECTORY'] = '/foo/bar/pro ject'
+      ENV['TM_FLEX_OUTPUT'] = 'abc/Test.swf'
+      
+      assert_equal(false, s.is_swc)
+      
+      clear_tm_env
+      
+      assert_equal(false, s.is_swc)
+      
+      
+    end 
+    
+    def test_source_path
+      
+      clear_tm_env
+      
+      s = FlexMate::Settings.new
+      
+      assert_equal(nil, s.source_path)
+      
+      clear_tm_env
+      
+      ENV['TM_PROJECT_DIRECTORY'] = cases_dir + '/a'
+      
+      assert_equal(cases_dir + '/a/src', s.source_path)
+      
+      clear_tm_env
+      
+      ENV['TM_PROJECT_DIRECTORY'] = cases_dir + '/b'
+      
+      assert_equal(cases_dir + '/b/source', s.source_path)
+      
+      clear_tm_env
+      
+      ENV['TM_PROJECT_DIRECTORY'] = cases_dir + '/c'
+      
+      assert_equal(cases_dir, s.source_path)
       
     end
     
